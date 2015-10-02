@@ -14,24 +14,32 @@ import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 
 public class TrackingService extends Service implements BeaconConsumer {
 
+    public static final String LOGTAG = "MyLog";
     private static final String BEACON_MONITORING_ID = "pitlab";
     private static final String BEACON_LAYOUT = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24";
     //private static final String BEACON_LAYOUT = "1E 02 01 1A 1A FF 4C 00 02 15 6f 2A d7 1e b7 50 11 e4 89 f3 68 f7 13";
     private static final String BEACONCHEX = "49 54 55 20 34 41 30 35 20 20 20 20 20 20 20 20";
     private static final String BEACONCODE = BEACONCHEX.replace(" ", "");
-    protected static final String TAG = "RangingActivity";
-    public static final String LOGTAG = "MyLog";
-    String distance;
-    String location;
     BeaconManager beaconManager;
-    long time;
-    long timeDetected;
     String macAdd = "";
     String currentMacAdd;
+    String location;
+    String distance;
+    double distanceMax = 10.0;
+    long time;
+    long timeDetected;
+    SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-mm-dd");
+    SimpleDateFormat timeformat = new SimpleDateFormat("hh:mm:ss");
+    String date = dateformat.format(new Date());
+    String currentTime = timeformat.format(new Date());
+    boolean record = true;
+
 
     public TrackingService() {
     }
@@ -39,11 +47,14 @@ public class TrackingService extends Service implements BeaconConsumer {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
-        Log.i(LOGTAG, "service starting");
+        Log.i(LOGTAG, "service started");
 
         //WAS USED TO TEST WITHOUT BEACON
         //dBMeter meter = new dBMeter();
         //meter.startTread();
+
+        //dBMeter meter = new dBMeter();
+        //meter.startrecording();
 
         beaconManager = BeaconManager.getInstanceForApplication(this);
         BeaconParser parser = new BeaconParser();
@@ -66,30 +77,33 @@ public class TrackingService extends Service implements BeaconConsumer {
             public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
                 time = System.currentTimeMillis();
                 long  elapsedtime = time - timeDetected;
-                if(elapsedtime > 10000){
+                if(elapsedtime > 20000){
                     macAdd = "";
                 }
 
-               // Log.i(LOGTAG, "scaning for beacons");
+                //Log.i(LOGTAG, "scaning for beacons");
 
                 if (beacons.size() > 0) {
                     Log.i(LOGTAG, "The first beacon I see is about " + beacons.iterator().next().getDistance() + " meters away. It is located at:  " + hexToASCII2(BEACONCODE) + " at" + time);
 
-                    currentMacAdd = beacons.iterator().next().getBluetoothAddress();
-                    Log.i(LOGTAG, "CURRENT MAC address: " + currentMacAdd);
-                    Log.i(LOGTAG, "MAC address: " + macAdd);
+                    if (beacons.iterator().next().getDistance() < distanceMax){
+                        currentMacAdd = beacons.iterator().next().getBluetoothAddress();
+                    }
+
+                    Log.i(LOGTAG, "CURRENT MAC address: " + currentMacAdd + " -- MAC address: " + macAdd);
+
                     double dist = (double) beacons.iterator().next().getDistance();
                     distance = Double.toString(dist);
                     location = hexToASCII2(BEACONCODE);
 
-                    if (beacons.iterator().next().getDistance() < 10.0 && !currentMacAdd.equals(macAdd)) {
+                    if (beacons.iterator().next().getDistance() < distanceMax && !currentMacAdd.equals(macAdd)) {
                         timeDetected = System.currentTimeMillis();
                         macAdd = currentMacAdd;
                         Log.i(LOGTAG, "A beacon was detected within 10m. - Distance: " + beacons.iterator().next().getDistance());
 
-                        //startTread();
                         dBMeter meter = new dBMeter();
-                        meter.startTread();
+                        meter.startrecording();
+
                     }
                 }
             }
@@ -111,21 +125,13 @@ public class TrackingService extends Service implements BeaconConsumer {
             sb.append((char) decimal);
         }
         return sb.toString();
-
     }
 
-    public String getLocation() {
-        return location.toString();
-    }
 
-    public String getDistance() {
-        return distance;
+    public static void returnDbResult(double db){
+        Log.i(LOGTAG, "result from dbmeter: "+db);
+        //TODO send til database(reading, tid, date, currentMacAdd)
     }
-
-    public long getTime() {
-        return time;
-    }
-
 
     @Override
     public IBinder onBind(Intent intent) {

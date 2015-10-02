@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">AudioMap</string>
 
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="select"> Floor</string>
+    <string name="select2">Room</string>
+    <string name="action_settings">action_setting</string>
+    <string name="show_table">Show Table</string>
+    <string name="show_audiomap">Show Audiomap</string>
+
 </resources>
