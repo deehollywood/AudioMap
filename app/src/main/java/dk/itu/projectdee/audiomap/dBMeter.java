@@ -8,7 +8,8 @@ import android.util.Log;
 /**
  * Created by Dee on 9/27/2015.
  */
-public class dBMeter implements  Average{
+//public class dBMeter implements  Average{
+public class dBMeter{
 
     private static final int SAMPLING_RATE = 44100;  // The sampling rate for the audio recorder.
     private RecordingThread mRecordingThread;
@@ -19,7 +20,7 @@ public class dBMeter implements  Average{
     private long time;
     private long timeDetected;
     private long timeElapsed;
-    private double avgTenReadings;
+    private static double avgTenReadings;
     public static final String LOGTAG = "MyLog";
 
     //start method that starts to record on the microphone
@@ -32,10 +33,10 @@ public class dBMeter implements  Average{
         mRecordingThread.start();
     }
 
-    @Override
+    /*@Override
     public double returnSoundLevel() {
         return avgTenReadings;
-    }
+    }*/
 
     private class RecordingThread extends Thread {
 
@@ -56,7 +57,7 @@ public class dBMeter implements  Average{
 
             record.stop();
             record.release();
-            //TrackingService.returnDbResult(avgTenReadings);
+            TrackingService.returnDbResult(avgTenReadings);
         }
 
         /**

@@ -27,7 +27,7 @@ public class TrackingService extends Service implements BeaconConsumer {
     private static final String BEACONCHEX = "49 54 55 20 34 41 30 35 20 20 20 20 20 20 20 20";
     private static final String BEACONCODE = BEACONCHEX.replace(" ", "");
     BeaconManager beaconManager;
-    String macAdd = "";
+    private static String macAdd = "";
     String currentMacAdd;
     String location;
     String distance;
@@ -49,12 +49,14 @@ public class TrackingService extends Service implements BeaconConsumer {
         Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
         Log.i(LOGTAG, "service started");
 
-        //WAS USED TO TEST WITHOUT BEACON
-        //dBMeter meter = new dBMeter();
-        //meter.startTread();
+        //USED TO TEST WITHOUT BEACON
+       /* dBMeter meter = new dBMeter();
+        meter.startrecording();
+        double soundlevel = meter.returnSoundLevel();
+        String sound = Double.toString(soundlevel);
 
-        //dBMeter meter = new dBMeter();
-        //meter.startrecording();
+        Log.d(ServerConnect.TAG, "just before sc.sendData");
+        Log.d(ServerConnect.TAG, "the Volume from trackingService: :  " + sound);*/
 
         beaconManager = BeaconManager.getInstanceForApplication(this);
         BeaconParser parser = new BeaconParser();
@@ -77,32 +79,47 @@ public class TrackingService extends Service implements BeaconConsumer {
             public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
                 time = System.currentTimeMillis();
                 long  elapsedtime = time - timeDetected;
-                if(elapsedtime > 20000){
+                /*if(elapsedtime > 20005){
                     macAdd = "";
-                }
+                }*/
 
                 //Log.i(LOGTAG, "scaning for beacons");
 
                 if (beacons.size() > 0) {
-                    Log.i(LOGTAG, "The first beacon I see is about " + beacons.iterator().next().getDistance() + " meters away. It is located at:  " + hexToASCII2(BEACONCODE) + " at" + time);
+                    //Log.i(LOGTAG, "The first beacon I see is about " + beacons.iterator().next().getDistance() + " meters away. It is located at:  " + hexToASCII2(BEACONCODE) + " at" + time);
 
                     if (beacons.iterator().next().getDistance() < distanceMax){
                         currentMacAdd = beacons.iterator().next().getBluetoothAddress();
+                        Log.i(LOGTAG, "MAC address detected: " + currentMacAdd);
                     }
 
-                    Log.i(LOGTAG, "CURRENT MAC address: " + currentMacAdd + " -- MAC address: " + macAdd);
+                    //Log.i(LOGTAG, "CURRENT MAC address: " + currentMacAdd + " -- MAC address: " + macAdd);
 
-                    double dist = (double) beacons.iterator().next().getDistance();
+                    double dist = beacons.iterator().next().getDistance();
                     distance = Double.toString(dist);
                     location = hexToASCII2(BEACONCODE);
 
-                    if (beacons.iterator().next().getDistance() < distanceMax && !currentMacAdd.equals(macAdd)) {
+
+                    if (beacons.iterator().next().getDistance() < distanceMax && macAdd.equals("")) {
+                        Log.i(LOGTAG, "MACADD: "+ macAdd+"  --  CURADD: "+ currentMacAdd);
                         timeDetected = System.currentTimeMillis();
                         macAdd = currentMacAdd;
-                        Log.i(LOGTAG, "A beacon was detected within 10m. - Distance: " + beacons.iterator().next().getDistance());
+                        //Log.i(LOGTAG, "A beacon was detected within 10m. - Distance: " + beacons.iterator().next().getDistance());
 
-                        dBMeter meter = new dBMeter();
-                        meter.startrecording();
+                        //dBMeter meter = new dBMeter();
+                        //meter.startrecording();
+                        if (record) {
+
+                            dBMeter meter = new dBMeter();
+                            meter.startrecording();
+                           /* double soundlevel = meter.returnSoundLevel();
+                            String sound = Double.toString(soundlevel);
+
+                            Log.d(ServerConnect.TAG, "the Volume from trackingService: :  " + sound);
+
+                            ServerConnect sc = new ServerConnect(date, currentTime, currentMacAdd, sound);
+                            sc.sendData();*/
+                        }
 
                     }
                 }
@@ -130,6 +147,7 @@ public class TrackingService extends Service implements BeaconConsumer {
 
     public static void returnDbResult(double db){
         Log.i(LOGTAG, "result from dbmeter: "+db);
+        macAdd = "";
         //TODO send til database(reading, tid, date, currentMacAdd)
     }
 
